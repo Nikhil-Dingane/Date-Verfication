@@ -29,20 +29,50 @@ resulfilewriter.writerow(resultheaders)
 csvmappingreader=csv.reader(open(sys.argv[3]))
 csvmappingdata=list(csvmappingreader)
 
+# unique keys within input file
+keys=[]
+for i in csvmappingdata:
+    if i[2]=="yes":
+        keys.append(i[0])
+
+# dictionary to keep mapping between unique key and its row number
+inputFileDictionary={}
+#making dictionary of input file
 for i in range(0,len(csvinputfiledata)):
+    key=""
+    for keyfield in keys:
+        key=key+csvinputfiledata[i][keyfield]
+    inputFileDictionary[key]=i
+
+# unique keys list within output file
+outputkeys=[]
+for i in csvmappingdata:
+    if i[2]=="yes":
+        outputkeys.append(i[1])
+
+# reading output file row by row
+for row in csvoutputfilefiledata:
+    # key to be mapped within input file key and row number dictionary 
+    searchkey=""
+    for keyfield in outputkeys:
+        searchkey=searchkey+row[keyfield]
+    try:
+        index=inputFileDictionary[str(searchkey)]
+    except KeyError:
+        index=-1;
     newrow=[]
     flag=True
     comment=""
     for j in range(0,len(csvmappingdata)):
-        newrow.append(csvoutputfilefiledata[i][csvmappingdata[j][1]])
-        if csvinputfiledata[i][csvmappingdata[j][0]]==csvoutputfilefiledata[i][csvmappingdata[j][1]]:
-            print("matched")
-        else:
+        newrow.append(row[csvmappingdata[j][1]])
+        if csvinputfiledata[index][csvmappingdata[j][0]]!=row[csvmappingdata[j][1]]:
             flag=False
             comment=comment+" "+csvmappingdata[j][1]
-            print("unmatched")
     if flag==True:
         newrow.append("Matched")
     else:
         newrow.append("Not matched : "+comment)
     resulfilewriter.writerow(newrow)
+    
+    
+#os.system("rm "+resultfilename)
